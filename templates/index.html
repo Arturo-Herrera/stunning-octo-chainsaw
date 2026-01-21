@@ -1,2 +1,83 @@
-    <h1>xd</h1>
-    <p>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Deserunt officiis laudantium praesentium quibusdam iste. Iste quod officiis provident soluta tenetur magni itaque delectus excepturi quo? Ipsam porro inventore accusamus iste?</p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tijuana Route Planner</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+    <style>
+        #map { height: 100vh; width: 100%; }
+        /* Ajuste para que el panel de control de ruta no tape todo en móviles */
+        .leaflet-routing-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white !important;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-11/12 max-w-md">
+        <div class="bg-white p-4 rounded-xl shadow-2xl border border-gray-200">
+            <h1 class="text-xl font-bold text-indigo-600 text-center">TJ Route Finder 🚗</h1>
+            <p class="text-xs text-gray-500 text-center">Haz clic en el mapa para establecer inicio y fin</p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        // 1. Inicializar el mapa centrado en Tijuana (Glorieta Cuauhtémoc)
+        const map = L.map('map').setView([32.5283, -117.0211], 13);
+
+        // 2. Agregar capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 3. Configurar el control de rutas
+        const routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(32.5283, -117.0211), // Inicio: Zona Río
+                L.latLng(32.5027, -117.0037)  // Fin: Ejemplo 5 y 10
+            ],
+            lineOptions: {
+                styles: [{ color: '#4F46E5', weight: 6 }] // Color Indigo-600 de Tailwind
+            },
+            routeWhileDragging: true,
+            language: 'es',
+            createMarker: function(i, waypoint, n) {
+                const marker = L.marker(waypoint.latLng, {
+                    draggable: true,
+                    bounceOnAdd: true
+                });
+                return marker.bindPopup(i === 0 ? "Origen" : "Destino");
+            }
+        }).addTo(map);
+
+        // 4. Función para actualizar ruta al hacer clic (opcional para mejorar UX)
+        map.on('click', function(e) {
+            const container = routingControl.getPlan();
+            const waypoints = container.getWaypoints();
+            
+            // Si el primer punto está vacío o ya hay dos, reiniciamos al punto de clic
+            if (!waypoints[0].latLng || (waypoints[0].latLng && waypoints[1].latLng)) {
+                routingControl.setWaypoints([e.latLng]);
+            } else {
+                routingControl.spliceWaypoints(waypoints.length - 1, 1, e.latLng);
+            }
+        });
+    </script>
+</body>
+</html>
